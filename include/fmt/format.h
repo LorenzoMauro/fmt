@@ -373,7 +373,8 @@ inline auto get_data(Container& c) -> typename Container::value_type* {
   return c.data();
 }
 
-#if defined(_SECURE_SCL) && _SECURE_SCL
+#if 0
+// #if defined(_SECURE_SCL) && _SECURE_SCL
 // Make a checked iterator to avoid MSVC warnings.
 template <typename T> using checked_ptr = stdext::checked_array_iterator<T*>;
 template <typename T>
@@ -394,8 +395,8 @@ template <typename Container, FMT_ENABLE_IF(is_contiguous<Container>::value)>
 __attribute__((no_sanitize("undefined")))
 #endif
 inline auto
-reserve(std::back_insert_iterator<Container> it, size_t n)
-    -> checked_ptr<typename Container::value_type> {
+reserve(std::back_insert_iterator<Container> it,
+        size_t n) -> checked_ptr<typename Container::value_type> {
   Container& c = get_container(it);
   size_t size = c.size();
   c.resize(size + n);
@@ -445,8 +446,8 @@ constexpr auto base_iterator(Iterator, Iterator it) -> Iterator {
 // <algorithm> is spectacularly slow to compile in C++20 so use a simple fill_n
 // instead (#1998).
 template <typename OutputIt, typename Size, typename T>
-FMT_CONSTEXPR auto fill_n(OutputIt out, Size count, const T& value)
-    -> OutputIt {
+FMT_CONSTEXPR auto fill_n(OutputIt out, Size count,
+                          const T& value) -> OutputIt {
   for (Size i = 0; i < count; ++i) *out++ = value;
   return out;
 }
@@ -488,8 +489,8 @@ FMT_CONSTEXPR FMT_NOINLINE auto copy_str_noinline(InputIt begin, InputIt end,
  * occurs, this pointer will be a guess that depends on the particular
  * error, but it will always advance at least one byte.
  */
-FMT_CONSTEXPR inline auto utf8_decode(const char* s, uint32_t* c, int* e)
-    -> const char* {
+FMT_CONSTEXPR inline auto utf8_decode(const char* s, uint32_t* c,
+                                      int* e) -> const char* {
   constexpr const int masks[] = {0x00, 0x7f, 0x1f, 0x0f, 0x07};
   constexpr const uint32_t mins[] = {4194304, 0, 128, 2048, 65536};
   constexpr const int shiftc[] = {0, 18, 12, 6, 0};
@@ -606,8 +607,8 @@ inline auto code_point_index(basic_string_view<Char> s, size_t n) -> size_t {
 }
 
 // Calculates the index of the nth code point in a UTF-8 string.
-inline auto code_point_index(basic_string_view<char8_type> s, size_t n)
-    -> size_t {
+inline auto code_point_index(basic_string_view<char8_type> s,
+                             size_t n) -> size_t {
   const char8_type* data = s.data();
   size_t num_code_points = 0;
   for (size_t i = 0, size = s.size(); i != size; ++i) {
@@ -745,8 +746,8 @@ class basic_memory_buffer final : public detail::buffer<T> {
     Moves the content of the other ``basic_memory_buffer`` object to this one.
     \endrst
    */
-  auto operator=(basic_memory_buffer&& other) FMT_NOEXCEPT
-      -> basic_memory_buffer& {
+  auto operator=(basic_memory_buffer&& other)
+      FMT_NOEXCEPT->basic_memory_buffer& {
     FMT_ASSERT(this != &other, "");
     deallocate();
     move(other);
@@ -910,10 +911,10 @@ using uint32_or_64_or_128_t =
 template <typename T>
 using uint64_or_128_t = conditional_t<num_bits<T>() <= 64, uint64_t, uint128_t>;
 
-#define FMT_POWERS_OF_10(factor)                                             \
-  factor * 10, (factor)*100, (factor)*1000, (factor)*10000, (factor)*100000, \
-      (factor)*1000000, (factor)*10000000, (factor)*100000000,               \
-      (factor)*1000000000
+#define FMT_POWERS_OF_10(factor)                                  \
+  factor * 10, (factor) * 100, (factor) * 1000, (factor) * 10000, \
+      (factor) * 100000, (factor) * 1000000, (factor) * 10000000, \
+      (factor) * 100000000, (factor) * 1000000000
 
 // Converts value in the range [0, 100) to a string.
 constexpr const char* digits2(size_t value) {
@@ -1010,7 +1011,7 @@ template <> auto count_digits<4>(detail::fallback_uintptr n) -> int;
 FMT_INLINE auto do_count_digits(uint32_t n) -> int {
 // An optimization by Kendall Willets from https://bit.ly/3uOIQrB.
 // This increments the upper 32 bits (log10(T) - 1) when >= T is added.
-#  define FMT_INC(T) (((sizeof(#  T) - 1ull) << 32) - T)
+#  define FMT_INC(T) (((sizeof(#T) - 1ull) << 32) - T)
   static constexpr uint64_t table[] = {
       FMT_INC(0),          FMT_INC(0),          FMT_INC(0),           // 8
       FMT_INC(10),         FMT_INC(10),         FMT_INC(10),          // 64
@@ -1103,8 +1104,8 @@ template <typename Iterator> struct format_decimal_result {
 // buffer of specified size. The caller must ensure that the buffer is large
 // enough.
 template <typename Char, typename UInt>
-FMT_CONSTEXPR20 auto format_decimal(Char* out, UInt value, int size)
-    -> format_decimal_result<Char*> {
+FMT_CONSTEXPR20 auto format_decimal(Char* out, UInt value,
+                                    int size) -> format_decimal_result<Char*> {
   FMT_ASSERT(size >= count_digits(value), "invalid digit count");
   out += size;
   Char* end = out;
@@ -1127,8 +1128,8 @@ FMT_CONSTEXPR20 auto format_decimal(Char* out, UInt value, int size)
 
 template <typename Char, typename UInt, typename Iterator,
           FMT_ENABLE_IF(!std::is_pointer<remove_cvref_t<Iterator>>::value)>
-inline auto format_decimal(Iterator out, UInt value, int size)
-    -> format_decimal_result<Iterator> {
+inline auto format_decimal(Iterator out, UInt value,
+                           int size) -> format_decimal_result<Iterator> {
   // Buffer is large enough to hold all digits (digits10 + 1).
   Char buffer[digits10<UInt>() + 1];
   auto end = format_decimal(buffer, value, size).end;
@@ -1172,8 +1173,8 @@ auto format_uint(Char* buffer, detail::fallback_uintptr n, int num_digits,
 }
 
 template <unsigned BASE_BITS, typename Char, typename It, typename UInt>
-inline auto format_uint(It out, UInt value, int num_digits, bool upper = false)
-    -> It {
+inline auto format_uint(It out, UInt value, int num_digits,
+                        bool upper = false) -> It {
   if (auto ptr = to_pointer<Char>(out, to_unsigned(num_digits))) {
     format_uint<BASE_BITS>(ptr, value, num_digits, upper);
     return out;
@@ -1526,8 +1527,8 @@ auto write_int_localized(OutputIt out, UInt value, unsigned prefix,
 
 template <typename OutputIt, typename UInt, typename Char>
 auto write_int_localized(OutputIt& out, UInt value, unsigned prefix,
-                         const basic_format_specs<Char>& specs, locale_ref loc)
-    -> bool {
+                         const basic_format_specs<Char>& specs,
+                         locale_ref loc) -> bool {
   auto grouping = digit_grouping<Char>(loc);
   out = write_int_localized(out, value, prefix, specs, grouping);
   return true;
@@ -1664,15 +1665,15 @@ FMT_CONSTEXPR auto write(OutputIt out, basic_string_view<Char> s,
 template <typename Char, typename OutputIt>
 FMT_CONSTEXPR auto write(OutputIt out,
                          basic_string_view<type_identity_t<Char>> s,
-                         const basic_format_specs<Char>& specs, locale_ref)
-    -> OutputIt {
+                         const basic_format_specs<Char>& specs,
+                         locale_ref) -> OutputIt {
   check_string_type_spec(specs.type);
   return write(out, s, specs);
 }
 template <typename Char, typename OutputIt>
 FMT_CONSTEXPR auto write(OutputIt out, const Char* s,
-                         const basic_format_specs<Char>& specs, locale_ref)
-    -> OutputIt {
+                         const basic_format_specs<Char>& specs,
+                         locale_ref) -> OutputIt {
   return check_cstring_type_spec(specs.type)
              ? write(out, basic_string_view<Char>(s), specs, {})
              : write_ptr<Char>(out, to_uintptr(s), &specs);
@@ -1805,8 +1806,8 @@ template <typename OutputIt, typename DecimalFP, typename Char,
           typename Grouping = digit_grouping<Char>>
 FMT_CONSTEXPR20 auto do_write_float(OutputIt out, const DecimalFP& fp,
                                     const basic_format_specs<Char>& specs,
-                                    float_specs fspecs, locale_ref loc)
-    -> OutputIt {
+                                    float_specs fspecs,
+                                    locale_ref loc) -> OutputIt {
   auto significand = fp.significand;
   int significand_size = get_significand_size(fp);
   constexpr Char zero = static_cast<Char>('0');
@@ -1926,8 +1927,8 @@ template <typename Char> class fallback_digit_grouping {
 template <typename OutputIt, typename DecimalFP, typename Char>
 FMT_CONSTEXPR20 auto write_float(OutputIt out, const DecimalFP& fp,
                                  const basic_format_specs<Char>& specs,
-                                 float_specs fspecs, locale_ref loc)
-    -> OutputIt {
+                                 float_specs fspecs,
+                                 locale_ref loc) -> OutputIt {
   if (is_constant_evaluated()) {
     return do_write_float<OutputIt, DecimalFP, Char,
                           fallback_digit_grouping<Char>>(out, fp, specs, fspecs,
@@ -1982,8 +1983,8 @@ FMT_INLINE FMT_CONSTEXPR bool signbit(T value) {
 template <typename Char, typename OutputIt, typename T,
           FMT_ENABLE_IF(std::is_floating_point<T>::value)>
 FMT_CONSTEXPR20 auto write(OutputIt out, T value,
-                           basic_format_specs<Char> specs, locale_ref loc = {})
-    -> OutputIt {
+                           basic_format_specs<Char> specs,
+                           locale_ref loc = {}) -> OutputIt {
   if (const_check(!is_supported_floating_point(value))) return out;
   float_specs fspecs = parse_float_type_spec(specs);
   fspecs.sign = specs.sign;
@@ -2072,8 +2073,8 @@ auto write(OutputIt out, monostate, basic_format_specs<Char> = {},
 }
 
 template <typename Char, typename OutputIt>
-FMT_CONSTEXPR auto write(OutputIt out, basic_string_view<Char> value)
-    -> OutputIt {
+FMT_CONSTEXPR auto write(OutputIt out,
+                         basic_string_view<Char> value) -> OutputIt {
   auto it = reserve(out, value.size());
   it = copy_str_noinline<Char>(value.begin(), value.end(), it);
   return base_iterator(out, it);
@@ -2139,8 +2140,8 @@ FMT_CONSTEXPR auto write(OutputIt out, Char value) -> OutputIt {
 }
 
 template <typename Char, typename OutputIt>
-FMT_CONSTEXPR_CHAR_TRAITS auto write(OutputIt out, const Char* value)
-    -> OutputIt {
+FMT_CONSTEXPR_CHAR_TRAITS auto write(OutputIt out,
+                                     const Char* value) -> OutputIt {
   if (!value) {
     throw_format_error("string pointer is null");
   } else {
@@ -2152,8 +2153,8 @@ FMT_CONSTEXPR_CHAR_TRAITS auto write(OutputIt out, const Char* value)
 template <typename Char, typename OutputIt, typename T,
           FMT_ENABLE_IF(std::is_same<T, void>::value)>
 auto write(OutputIt out, const T* value,
-           const basic_format_specs<Char>& specs = {}, locale_ref = {})
-    -> OutputIt {
+           const basic_format_specs<Char>& specs = {},
+           locale_ref = {}) -> OutputIt {
   check_pointer_type_spec(specs.type, error_handler());
   return write_ptr<Char>(out, to_uintptr(value), &specs);
 }
@@ -2161,12 +2162,13 @@ auto write(OutputIt out, const T* value,
 // A write overload that handles implicit conversions.
 template <typename Char, typename OutputIt, typename T,
           typename Context = basic_format_context<OutputIt, Char>>
-FMT_CONSTEXPR auto write(OutputIt out, const T& value) -> enable_if_t<
-    std::is_class<T>::value && !is_string<T>::value &&
-        !std::is_same<T, Char>::value &&
-        !std::is_same<const T&,
-                      decltype(arg_mapper<Context>().map(value))>::value,
-    OutputIt> {
+FMT_CONSTEXPR auto write(OutputIt out, const T& value)
+    -> enable_if_t<
+        std::is_class<T>::value && !is_string<T>::value &&
+            !std::is_same<T, Char>::value &&
+            !std::is_same<const T&,
+                          decltype(arg_mapper<Context>().map(value))>::value,
+        OutputIt> {
   return write<Char>(out, arg_mapper<Context>().map(value));
 }
 
@@ -2468,8 +2470,8 @@ FMT_API auto vsystem_error(int error_code, string_view format_str,
  \endrst
 */
 template <typename... T>
-auto system_error(int error_code, format_string<T...> fmt, T&&... args)
-    -> std::system_error {
+auto system_error(int error_code, format_string<T...> fmt,
+                  T&&... args) -> std::system_error {
   return vsystem_error(error_code, fmt, fmt::make_format_args(args...));
 }
 
@@ -2581,8 +2583,8 @@ formatter<T, Char,
   template <typename Char>                                               \
   struct formatter<Type, Char> : formatter<Base, Char> {                 \
     template <typename FormatContext>                                    \
-    auto format(Type const& val, FormatContext& ctx) const               \
-        -> decltype(ctx.out()) {                                         \
+    auto format(Type const& val,                                         \
+                FormatContext& ctx) const -> decltype(ctx.out()) {       \
       return formatter<Base, Char>::format(static_cast<Base>(val), ctx); \
     }                                                                    \
   }
@@ -2610,8 +2612,8 @@ struct formatter<void*, Char> : formatter<const void*, Char> {
 template <typename Char, size_t N>
 struct formatter<Char[N], Char> : formatter<basic_string_view<Char>, Char> {
   template <typename FormatContext>
-  FMT_CONSTEXPR auto format(const Char* val, FormatContext& ctx) const
-      -> decltype(ctx.out()) {
+  FMT_CONSTEXPR auto format(const Char* val,
+                            FormatContext& ctx) const -> decltype(ctx.out()) {
     return formatter<basic_string_view<Char>, Char>::format(val, ctx);
   }
 };
@@ -2723,7 +2725,9 @@ template <> struct formatter<bytes> {
 };
 
 // group_digits_view is not derived from view because it copies the argument.
-template <typename T> struct group_digits_view { T value; };
+template <typename T> struct group_digits_view {
+  T value;
+};
 
 /**
   \rst
@@ -2756,8 +2760,8 @@ template <typename T> struct formatter<group_digits_view<T>> : formatter<T> {
   }
 
   template <typename FormatContext>
-  auto format(group_digits_view<T> t, FormatContext& ctx)
-      -> decltype(ctx.out()) {
+  auto format(group_digits_view<T> t,
+              FormatContext& ctx) -> decltype(ctx.out()) {
     detail::handle_dynamic_spec<detail::width_checker>(specs_.width,
                                                        specs_.width_ref, ctx);
     detail::handle_dynamic_spec<detail::precision_checker>(
@@ -2818,8 +2822,8 @@ struct formatter<join_view<It, Sentinel, Char>, Char> {
   }
 
   template <typename FormatContext>
-  auto format(const join_view<It, Sentinel, Char>& value, FormatContext& ctx)
-      -> decltype(ctx.out()) {
+  auto format(const join_view<It, Sentinel, Char>& value,
+              FormatContext& ctx) -> decltype(ctx.out()) {
     auto it = value.begin;
     auto out = ctx.out();
     if (it != value.end) {
@@ -2965,8 +2969,8 @@ void vformat_to(
           arg));
     }
 
-    auto on_format_specs(int id, const Char* begin, const Char* end)
-        -> const Char* {
+    auto on_format_specs(int id, const Char* begin,
+                         const Char* end) -> const Char* {
       auto arg = get_arg(context, id);
       if (arg.type() == type::custom_type) {
         parse_context.advance_to(parse_context.begin() +
@@ -2996,8 +3000,8 @@ extern template FMT_API auto thousands_sep_impl<wchar_t>(locale_ref)
 extern template FMT_API auto decimal_point_impl(locale_ref) -> char;
 extern template FMT_API auto decimal_point_impl(locale_ref) -> wchar_t;
 extern template auto format_float<double>(double value, int precision,
-                                          float_specs specs, buffer<char>& buf)
-    -> int;
+                                          float_specs specs,
+                                          buffer<char>& buf) -> int;
 extern template auto format_float<long double>(long double value, int precision,
                                                float_specs specs,
                                                buffer<char>& buf) -> int;
@@ -3048,22 +3052,22 @@ FMT_DEPRECATED constexpr auto operator"" _format(const char* s, size_t n)
 #endif  // FMT_USE_USER_DEFINED_LITERALS
 
 template <typename Locale, FMT_ENABLE_IF(detail::is_locale<Locale>::value)>
-inline auto vformat(const Locale& loc, string_view fmt, format_args args)
-    -> std::string {
+inline auto vformat(const Locale& loc, string_view fmt,
+                    format_args args) -> std::string {
   return detail::vformat(loc, fmt, args);
 }
 
 template <typename Locale, typename... T,
           FMT_ENABLE_IF(detail::is_locale<Locale>::value)>
-inline auto format(const Locale& loc, format_string<T...> fmt, T&&... args)
-    -> std::string {
+inline auto format(const Locale& loc, format_string<T...> fmt,
+                   T&&... args) -> std::string {
   return vformat(loc, string_view(fmt), fmt::make_format_args(args...));
 }
 
 template <typename... T, size_t SIZE, typename Allocator>
 FMT_DEPRECATED auto format_to(basic_memory_buffer<char, SIZE, Allocator>& buf,
-                              format_string<T...> fmt, T&&... args)
-    -> appender {
+                              format_string<T...> fmt,
+                              T&&... args) -> appender {
   detail::vformat_to(buf, string_view(fmt), fmt::make_format_args(args...));
   return appender(buf);
 }
